@@ -11,6 +11,62 @@ line = file.readline()
 labels = {}
 i = 0
 
+def regis_to_bin(x):
+    y = ''
+    while x != 0:
+        k = x%2
+        y += str(k)
+        x = x//2
+    return y[::-1] , len(y)
+
+
+def imm_to_bin(x ,bits = 12):
+    num = int(x) 
+    
+    twos_complement = format(num & (2**bits - 1), f'0{bits}b')
+    return twos_complement
+
+def r_type(a,l,index):
+    try:
+        l = l.split(',')
+        b,c,d = l[0], l[1], l[2]
+        r_type = {'add' : {'funct7' : '0000000' , 'funct3' : '000' , 'opcode' : '0110011'} , 'sub' : {'funct7' : '0100000' , 'funct3' : '000' , 'opcode' : '0110011'} ,
+        'slt' : {'funct7' : '0000000' , 'funct3' : '010' , 'opcode' : '0110011'} , 
+        'srl' : {'funct7' : '0000000' , 'funct3' : '101' , 'opcode' : '0110011'} , 'or' : {'funct7' : '0000000' , 'funct3' : '110' , 'opcode' : '0110011'} ,
+        'and' : {'funct7' : '0000000' , 'funct3' : '111' , 'opcode' : '0110011'}}
+        k = r_type[a]
+
+        if b in abi_to_register or b in registers:
+            b = abi_to_register[b] if b in abi_to_register else b
+            b = int(b[1:])
+            b ,i = regis_to_bin(b) 
+            b = '0'*(5-i) + b
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if c in abi_to_register or c in registers:
+            c = abi_to_register[c] if c in abi_to_register else c
+            c = int(c[1:])
+            c ,i= regis_to_bin(c) 
+            c = '0'*(5-i) + c
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if d in abi_to_register or d in registers:
+            d = abi_to_register[d] if d in abi_to_register else d
+            d = int(d[1:])
+            d , i = regis_to_bin(d)
+            d = '0'*(5-i) + d
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        t = f"{k['funct7']}{d}{c}{k['funct3']}{b}{k['opcode']}"
+
+        return t
+    except:
+        print(f"ERROR at line {index+1}")
+        return f"ERROR at line {index+1}"
+
 def b_type(a,l,index):
     try:
         b_type = {"beq" : {'funct3' : '000' , 'opcode' : '1100011'}, "bne" : {'funct3' : '001' , 'opcode' : '1100011'},
