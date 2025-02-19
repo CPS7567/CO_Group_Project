@@ -5,12 +5,6 @@ r_dict = ['add','sub','slt','srl','or','and']
 i_dict = ['lw','addi','jalr']
 b_dict = ['beq','bne','blt']
 
-file = open("text.txt",'r')
-lines = []
-line = file.readline()
-labels = {}
-i = 0
-
 def regis_to_bin(x):
     y = ''
     while x != 0:
@@ -25,6 +19,35 @@ def imm_to_bin(x ,bits = 12):
     
     twos_complement = format(num & (2**bits - 1), f'0{bits}b')
     return twos_complement
+
+
+def s_type(ins,ops,index):
+    try:
+        ops = ops.split(',')
+        ops[1:2] = ops[1].split('(')
+        ops[0] = ops[0].strip()
+        ops[1] = ops[1].strip()
+        ops[2] = ops[2].strip(" )")
+        if ops[0] not in registers:
+            ops[0] = abi_to_register[ops[0]]
+        if ops[2] not in registers:
+            ops[2] = abi_to_register[ops[2]]
+        ops[0] = int(ops[0][1:])
+        ops[2] = int(ops[2][1:])
+        result = ""
+        rs2,n = regis_to_bin(ops[0])
+        while(len(rs2) < 5):
+            rs2 = '0' + rs2
+        imm = imm_to_bin(ops[1])
+        rs1,n = regis_to_bin(ops[2])
+        while(len(rs1) < 5):
+            rs1 = '0' + rs1
+        result = imm[0:7] + rs2 + rs1 + '010' + imm[7:] + '0100011'
+        return result
+    except:
+        print(f"ERROR at line {index+1}")
+        return f"ERROR at line {index+1}"
+
 
 def r_type(a,l,index):
     try:
@@ -66,6 +89,49 @@ def r_type(a,l,index):
     except:
         print(f"ERROR at line {index+1}")
         return f"ERROR at line {index+1}"
+
+
+def i_type(a,l,index):
+    try:
+        i_type = {'lw' : {'funct3' : '010' , 'opcode' : '0000011'} , 'addi' : {'funct3' : '000' , 'opcode' : '0010011'} ,
+                'jalr' : {'funct3' : '000' , 'opcode' : '1100111'} }
+        k = i_type[a]
+
+        if a == 'lw':
+            t = l.split(',')
+            b  , c= t[0] , t[1]
+            c = c.split('(')
+            imm = c[0]
+            q = c[1].rstrip(')')
+        else:
+            t = l.split(",")
+            b,q ,imm= t[0] , t[1], t[2]
+        if b in abi_to_register or b in registers:
+            b = abi_to_register[b] if b in abi_to_register else b
+            b = int(b[1:])
+            b ,i = regis_to_bin(b) 
+            b = '0'*(5-i) + b
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if q in abi_to_register or q in registers:
+            q = abi_to_register[q] if q in abi_to_register else q
+            q = int(q[1:])
+            q, i = regis_to_bin(q)
+            q = '0' * (5 - i) + q
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if imm.isdigit() or '-' in imm: 
+            imm = imm_to_bin(imm)
+
+        t = f"{imm}{q}{k['funct3']}{b}{k['opcode']}"
+
+        return t 
+    except:
+        print(f"ERROR at line {index+1}")
+        return f"ERROR at line {index+1}"
+        
 
 def b_type(a,l,index):
     try:
@@ -145,7 +211,13 @@ def j_type(a,l,index):
     except:
         print(f"ERROR at line {index+1}")
         return f"ERROR at line {index+1}"
-     
+
+
+file = open("text.txt",'r')
+lines = []
+line = file.readline()
+labels = {}
+i = 0
 while line:
     if '\n' in line:
         line = line[:-1]
