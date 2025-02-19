@@ -13,7 +13,7 @@ b_dict = ['beq','bne','blt']
 
 
 def regis_to_bin(x):
-    y = ''
+    y = ""
     while x != 0:
         k = x%2
         y += str(k)
