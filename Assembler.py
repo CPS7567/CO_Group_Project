@@ -1,9 +1,16 @@
+import sys
+input_file = sys.argv[1]
+output_file = sys.argv[2]
+
+
 abi_to_register = {"zero":"x0","ra":"x1","sp":"x2","gp":"x3","tp":"x4","t0":"x5","t1":"x6","t2":"x7","s0":"x8","fp":"x8","s1":"x9","a0":"x10","a1":"x11","a2":"x12","a3":"x13","a4":"x14","a5":"x15","a6":"x16","a7":"x17","s2":"x18","s3":"x19","s4":"x20","s5":"x21","s6":"x22","s7":"x23","s8":"x24","s9":"x25","s10":"x26","s11":"x27","t3":"x28","t4":"x29","t5":"x30","t6":"x31"}
 registers = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x29', 'x30', 'x31']
+
 
 r_dict = ['add','sub','slt','srl','or','and']
 i_dict = ['lw','addi','jalr']
 b_dict = ['beq','bne','blt']
+
 
 def regis_to_bin(x):
     y = ''
@@ -17,7 +24,7 @@ def regis_to_bin(x):
 def imm_to_bin(x ,bits = 12):
     num = int(x) 
     
-    twos_complement = format(num & (2**bits - 1), f'0{bits}b')
+    twos_complement = format(num & (2**bits - 1), f'0{bits}b')  
     return twos_complement
 
 
@@ -168,7 +175,7 @@ def b_type(a,l,index):
             else:
                 print (f"ERROR at line {index+1}")
                 return f"ERROR at line {index+1}"
-
+        
         t = f"{imm[0]}{imm[2:8]}{c}{b}{b_type[a]['funct3']}{imm[8:12]}{imm[1]}{b_type[a]['opcode']}"
         return t
     except:
@@ -213,7 +220,7 @@ def j_type(a,l,index):
         return f"ERROR at line {index+1}"
 
 
-file = open("text.txt",'r')
+file = open(input_file,'r')
 lines = []
 line = file.readline()
 labels = {}
@@ -239,7 +246,7 @@ while line:
 file.close()
 
 
-file = open("output.txt",'w')
+file = open(output_file,'w')
 for i in lines:
     if i[0] in r_dict:
         st = r_type(i[0],i[1],lines.index(i))
@@ -252,6 +259,7 @@ for i in lines:
     elif i[0] == 'jal':
         st = j_type(i[0],i[1],lines.index(i))
     else:
+        st = f"ERROR at line {lines.index(i)+1}"
         print(f"ERROR at line {lines.index(i)+1}")
     file.write(st+'\n')
 file.close()
