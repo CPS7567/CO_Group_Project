@@ -10,6 +10,86 @@ lines = []
 line = file.readline()
 labels = {}
 i = 0
+
+def b_type(a,l,index):
+    try:
+        b_type = {"beq" : {'funct3' : '000' , 'opcode' : '1100011'}, "bne" : {'funct3' : '001' , 'opcode' : '1100011'},
+                'blt' : {'funct3' : '100' , 'opcode' : '1100011'} }
+        
+        k = b_type[a]
+        l  = l.split(',')
+        b,c,imm = l[0] , l[1] , l[2]
+        
+        if b in abi_to_register or b in registers:
+            b = abi_to_register[b] if b in abi_to_register else b
+            b = int(b[1:])
+            b ,i = regis_to_bin(b) 
+            b = '0'*(5-i) + b
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if c in abi_to_register or c in registers:
+            c = abi_to_register[c] if c in abi_to_register else c
+            c = int(c[1:])
+            c ,i= regis_to_bin(c) 
+            c = '0'*(5-i) + c
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        if imm.isdigit() or '-' in imm: 
+            imm = imm_to_bin(imm,13)
+        else:
+            if imm in labels:
+                imm = labels[imm] - index
+                imm *= 4
+                imm = imm_to_bin(imm,13)
+            else:
+                print (f"ERROR at line {index+1}")
+                return f"ERROR at line {index+1}"
+
+        t = f"{imm[0]}{imm[2:8]}{c}{b}{b_type[a]['funct3']}{imm[8:12]}{imm[1]}{b_type[a]['opcode']}"
+        return t
+    except:
+        print(f"ERROR at line {index+1}")
+        return f"ERROR at line {index+1}"
+
+
+def j_type(a,l,index):
+    try:
+        j_type = {"jal" :{ 'opcode' : '1101111'}}
+        l = l.split(',')
+        b = l[0]
+        if b in abi_to_register or b in registers:
+            b = abi_to_register[b] if b in abi_to_register else b
+            b = int(b[1:])
+            b ,i = regis_to_bin(b) 
+            b = '0'*(5-i) + b
+        else:
+            print (f"ERROR at line {index+1}")
+            return f"ERROR at line {index+1}"
+        imm = l[1]
+        
+        if imm.isdigit() or '-' in imm: 
+            num = int(imm) 
+            bits = 21
+            imm = format(num & (2**bits - 1), f'0{bits}b')
+        else:
+            if imm in labels:
+                imm = labels[imm] - index
+                imm *= 4
+                num = int(imm)
+                bits = 21
+                imm = format(num & (2**bits - 1), f'0{bits}b')
+            else:
+                print(f"ERROR at line {index+1}")
+                return f"ERROR at line {index+1}"
+        imm = imm[0] + imm[10:20] + imm[9] + imm[1:9]
+        t = f"{imm}{b}{j_type['jal']['opcode']}"
+        return t
+    except:
+        print(f"ERROR at line {index+1}")
+        return f"ERROR at line {index+1}"
+     
 while line:
     if '\n' in line:
         line = line[:-1]
