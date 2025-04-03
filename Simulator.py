@@ -93,6 +93,46 @@ def j_type(st,PC):
     # PC = PC + 4
     return PC
 
+def r_type(s):
+    rd = s [20:25]
+    rs1 = s[12:17]
+    rs2 = s[7:12]
+    func3 = s[17:20]
+    funct7 = s[:7]
+    rs1 = unsigned_bin_to_imm(rs1)
+    rs2 = unsigned_bin_to_imm(rs2)
+    rd = unsigned_bin_to_imm(rd)
+    a = regs[rs1]
+    b = regs[rs2]
+    
+    if func3 == '000':
+        if funct7 == '0100000':
+            k = a-b
+            regs[rd] = k
+        elif funct7 == '0000000':
+            k = a+b
+            regs[rd] = k
+        else:
+            print("ERROR")
+            exit()
+    elif func3 == '110' and funct7 == '0000000':
+        k = a|b
+        regs[rd] = k
+    elif func3 == '111' and funct7 == '0000000':
+        k = a&b
+        regs[rd] = k
+    elif func3 == '010' and funct7 == '0000000':
+        if a < b:
+            k = 1
+            regs[rd] = k
+    elif func3 == '101' and funct7 == '0000000':
+        
+        k = a>>(b%32)
+        regs[rd] = k
+    else: 
+        print("ERROR")
+        exit()
+
 file = open(input,'r')
 lines = []
 line = file.readline()
