@@ -6,7 +6,7 @@ input = sys.argv[1]
 output = sys.argv[2]
 
 abi_to_register = {"zero":"x0","ra":"x1","sp":"x2","gp":"x3","tp":"x4","t0":"x5","t1":"x6","t2":"x7","s0":"x8","fp":"x8","s1":"x9","a0":"x10","a1":"x11","a2":"x12","a3":"x13","a4":"x14","a5":"x15","a6":"x16","a7":"x17","s2":"x18","s3":"x19","s4":"x20","s5":"x21","s6":"x22","s7":"x23","s8":"x24","s9":"x25","s10":"x26","s11":"x27","t3":"x28","t4":"x29","t5":"x30","t6":"x31"}
-registers = ['x0', 'x1', 'x2', 'x3', 'x4`', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x29', 'x30', 'x31']
+registers = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x18', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x29', 'x30', 'x31']
 
 r_dict = ['add','sub','slt','srl','or','and']
 i_dict = ['lw','addi','jalr']
@@ -20,7 +20,6 @@ stack_dict = {"0x00000100": 0, "0x00000104": 0, "0x00000108": 0, "0x0000010C": 0
 }
 
 def bin_to_imm(binary_str):
-    """Convert a binary string (two's complement) back to an integer."""
     bits = len(binary_str)  
     num = int(binary_str, 2) 
   
@@ -30,7 +29,6 @@ def bin_to_imm(binary_str):
 
 def unsigned_bin_to_imm(st):
     num = int(st,2)
-    int()
     return num
 
 def hexa(n):
@@ -114,7 +112,6 @@ def j_type(st,PC):
     rd= unsigned_bin_to_imm(rd)
     regs[rd]= PC +4
     PC= PC + bin_to_imm(sext(imm))
-    # PC = PC + 4
     return PC
     
 def r_type(s):
@@ -146,15 +143,13 @@ def r_type(s):
         k = a&b
         regs[rd] = k
     elif func3 == '010' and funct7 == '0000000':
-        if a < b:      # slttttttttttt
+        if a < b:
             k = 1
             regs[rd] = k
     elif func3 == '101' and funct7 == '0000000':
         
         k = a>>(b%32)
         regs[rd] = k
-        ###       srllllllllllllllllllll
-        #         pass 
     else: 
         print("ERROR")
         exit()
@@ -169,7 +164,6 @@ def i_type(s,PC):
     imm = bin_to_imm(imm)
     
     if s [-7:] == '0000011' and f3 == '010':
-        # lwwwwww
         if (hexa(regs[rs] + imm)) in memory_dict:
             regs[rd] = memory_dict[hexa(regs[rs] + imm)]
         elif (hexa(regs[rs] + imm)) in stack_dict:
@@ -179,8 +173,7 @@ def i_type(s,PC):
             exit()
             
     elif s[-7:] == '0010011' and f3 == '000':
-        # rd = rs + sext(imm)
-        regs[rd]= regs[rs]+(imm)     # adii
+        regs[rd]= regs[rs]+(imm)    
         
     elif s[-7:] == '1100111' and f3 == '000':
         PC3 = PC
@@ -193,6 +186,37 @@ def i_type(s,PC):
         exit()
         
     return PC + 4
+
+def mul(s):
+    rd = s [20:25]
+    rs1 = s[12:17]
+    rs2 = s[7:12]
+    func3 = s[17:20]
+    funct7 = s[:7]
+    rs1 = unsigned_bin_to_imm(rs1)
+    rs2 = unsigned_bin_to_imm(rs2)
+    rd = unsigned_bin_to_imm(rd)
+    a = regs[rs1]
+    b = regs[rs2]
+    regs[rd] = a*b 
+
+def rst():
+    for i in range(32):
+        regs[i] = 0
+    regs[2] = 380
+    
+def rvrs(s):
+    rd = s[20:25]
+    rs1 = s[12:17]
+    rs1 = unsigned_bin_to_imm(rs1)
+    rd = unsigned_bin_to_imm(rd)
+    x1 = bin(regs[rs1])[2:]
+    x = ""
+    for i in x1:
+        x = i + x
+    
+    regs[rd] = bin_to_imm(x)
+    
     
 try:
     file = open(input,'r')
@@ -231,11 +255,21 @@ try:
             PC += 4
         elif op=='1100011':
             PC = b_type(i,PC)
-            # if PC == PC2: 
-            #     PC += 4
-            #     PC2 = PC
         elif op=='1101111':
             PC = j_type(i,PC)
+        elif op == '1110111':
+            func3 = i[17:20]
+            if func3 == '000':
+                mul(i)
+                PC += 4
+            elif func3 == '001':
+                rst()
+                PC += 4
+            elif func3 == '010':
+                PC = PC
+            elif func3 == '011':
+                rvrs(i)
+                PC += 4
         else:
             print("ERROR")
             exit()
