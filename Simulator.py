@@ -31,7 +31,37 @@ def bin_to_imm(binary_str):
         num -= 2**bits
     
     return num
+def unsigned_bin_to_imm(st):
+    num = int(st,2)
+    int()
+    return num
 
+def hexa(n):
+    result = f'{n:x}'
+    result = [i for i in result]
+    for i in range(len(result)):
+        if result[i].isalpha():
+            result[i] = result[i].upper()
+    result = ''.join(result)
+    l= len(result)
+    final=''
+    for i in range(0,8-l):
+        final= final+'0'
+    result='0x'+final+result
+    return result
+def bin(n):
+    if n < 0:
+        result = format(n & (2**32 - 1), f'0{32}b')  
+        result = '0b' + result
+    else:    
+        result = f'{n:b}'
+        l= len(result)
+        zero=''
+        for i in range(0,32-l):
+            zero=zero+'0'
+        result= '0b'+ zero+ result
+    return result
+  
 def sext(st,bits = 32):
     x = st[0]
     n = bits - len(st)
@@ -53,6 +83,15 @@ def b_type(st,PC,regs = regs):
         PC = PC + bin_to_imm(sext(imm)) if regs[rs2] != regs[rs1] else PC + 4
     elif f3 == "100":
         PC = PC + bin_to_imm(sext(imm)) if regs[rs2] < regs[rs1] else PC + 4
+def j_type(st,PC):
+    rd= st[20:25]
+    op= st[-7:]
+    imm = st[0] + st[12:20] + st[11] + st[1:11] +'0'
+    rd= unsigned_bin_to_imm(rd)
+    regs[rd]= PC +4
+    PC= PC + bin_to_imm(sext(imm))
+    # PC = PC + 4
+    return PC
 
 file = open(input,'r')
 lines = []
